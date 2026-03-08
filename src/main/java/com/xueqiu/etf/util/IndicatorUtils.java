@@ -9,6 +9,9 @@ public final class IndicatorUtils {
     private IndicatorUtils() {}
 
     public static double sma(List<PriceData> prices, int period) {
+        if (period <= 0) {
+            return Double.NaN;
+        }
         int size = prices.size();
         if (size < period) {
             return Double.NaN;
@@ -35,16 +38,25 @@ public final class IndicatorUtils {
     }
 
     public static double momentum(List<PriceData> prices, int lookback) {
+        if (lookback < 0) {
+            return 0.0;
+        }
         int size = prices.size();
         if (size <= lookback) {
             return 0.0;
         }
         double oldPrice = prices.get(size - lookback - 1).getClose();
         double newPrice = prices.get(size - 1).getClose();
+        if (oldPrice == 0.0) {
+            return 0.0;
+        }
         return (newPrice - oldPrice) / oldPrice;
     }
 
     public static double averageVolume(List<PriceData> prices, int period) {
+        if (period <= 0) {
+            return Double.NaN;
+        }
         int size = prices.size();
         if (size < period) {
             return Double.NaN;
@@ -57,6 +69,9 @@ public final class IndicatorUtils {
     }
 
     public static double atr(List<PriceData> prices, int period) {
+        if (period <= 0) {
+            return Double.NaN;
+        }
         int size = prices.size();
         if (size < period + 1) {
             return Double.NaN;
