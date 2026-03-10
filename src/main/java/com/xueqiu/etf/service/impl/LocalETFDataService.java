@@ -21,6 +21,16 @@ import java.util.Random;
 public class LocalETFDataService implements ETFDataService {
     private final Random random = new Random();
 
+    /**
+     * 用途：从本地 CSV 加载 ETF 备选池，并做基础可交易性筛选。
+     * 核心流程：
+     * 1) 读取 CSV 并逐行解析 ETF 属性；
+     * 2) 过滤市值不达标的产品（marketCap <= 5 亿）；
+     * 3) 以跟踪指数为维度，仅保留市值最大的 ETF，减少同质化；
+     * 4) 汇总并返回最终 ETF 池。
+     * 实现方式：利用 maxByIndex 哈希表维护“每个指数当前最优 ETF”，
+     * 单次遍历即可完成筛选与去重。
+     */
     @Override
     public List<ETF> loadETFPool(String filePath) {
         List<ETF> etfs = new ArrayList<ETF>();
@@ -46,6 +56,16 @@ public class LocalETFDataService implements ETFDataService {
         return etfs;
     }
 
+    /**
+     * 用途：生成指定 ETF 在给定区间内的分钟级历史行情（本地随机模拟数据）。
+     * 核心流程：
+     * 1) 从起始日 00:00 开始按分钟推进到结束日最后一分钟；
+     * 2) 以上一分钟收盘价为下一分钟开盘基准，叠加轻微随机漂移得到 close；
+     * 3) 基于 open/close 扩展 high/low，并随机生成成交量；
+     * 4) 逐分钟组装为 PriceData 列表返回。
+     * 实现方式：通过随机游走近似分钟波动，保证 OHLC 关系合理（high>=max(open,close)、
+     * low<=min(open,close)），用于策略开发阶段的离线联调。
+     */
     @Override
     public List<PriceData> fetchHistoricalData(String etfCode, LocalDate start, LocalDate end) {
         List<PriceData> list = new ArrayList<PriceData>();

@@ -10,6 +10,14 @@ import java.util.Map;
 
 public class MultiStrategyTrendAnalysisService implements TrendAnalysisService {
 
+    /**
+     * 用途：对同一时间序列执行多种趋势策略判定，返回“策略名 -> 趋势标签”的汇总结果。
+     * 核心流程：
+     * 1) 遍历传入策略列表；
+     * 2) 对每个策略调用 resolveTrend 进行独立判定；
+     * 3) 将结果写入 Map 统一返回给上层（例如轮动策略做共识过滤）。
+     * 实现方式：采用策略名称分发（字符串路由）的轻量模式，保证调用方可按需组合策略。
+     */
     @Override
     public Map<String, String> analyzeTrend(List<PriceData> priceList, String periodName, List<String> strategyList) {
         Map<String, String> result = new HashMap<String, String>();
@@ -19,6 +27,15 @@ public class MultiStrategyTrendAnalysisService implements TrendAnalysisService {
         return result;
     }
 
+    /**
+     * 用途：根据指定策略名称计算当前序列所处趋势区间（上涨/下跌/横盘）。
+     * 核心流程：
+     * 1) 先做最小样本判断，避免窗口指标失真；
+     * 2) 按策略类型分支计算关键指标（MA、布林、唐奇安、ATR、动量/量能等）；
+     * 3) 将指标值映射为统一趋势标签，便于上层组合决策。
+     * 实现方式：在一个方法中集中维护“策略名 -> 指标逻辑 -> 趋势标签”的映射，
+     * 通过统一返回值降低多策略结果整合成本。
+     */
     private String resolveTrend(List<PriceData> priceList, String strategy) {
         if (priceList.size() < 25) {
             return "横盘波段";
