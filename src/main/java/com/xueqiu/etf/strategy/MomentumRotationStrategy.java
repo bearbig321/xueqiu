@@ -20,6 +20,15 @@ public class MomentumRotationStrategy implements RotationStrategy {
         this.trendService = trendService;
     }
 
+    /**
+     * 用途：根据 ETF 分钟线数据生成最终轮动信号，输出动量最强的前 N 只标的。
+     * 核心流程：
+     * 1) 遍历每只 ETF，先做趋势过滤，仅保留至少一种策略判定为“上涨波段”的标的；
+     * 2) 对通过过滤的标的计算 lookbackBars 周期动量分值；
+     * 3) 按动量从高到低排序后截取 topN，作为本次调仓候选。
+     * 实现方式：使用 trendService 统一做多策略趋势判断，再复用 IndicatorUtils.momentum
+     * 计算强弱，最后通过排序后的 entry 列表完成选择。
+     */
     @Override
     public List<String> generateSignals(Map<String, List<PriceData>> etfPriceMap, int topN) {
         Map<String, Double> scoreMap = new HashMap<String, Double>();

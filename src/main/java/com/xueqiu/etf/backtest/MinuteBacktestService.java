@@ -21,6 +21,16 @@ public class MinuteBacktestService implements BacktestService {
         this.tradeExecutor = tradeExecutor;
     }
 
+    /**
+     * 用途：执行一次分钟级轮动回测，串联“取数→选基→交易→输出结果”完整链路。
+     * 核心流程：
+     * 1) 拉取池内每只 ETF 在区间内的分钟历史数据并聚合到 allData；
+     * 2) 调用轮动策略生成候选持仓（最多 3 只）；
+     * 3) 将候选持仓与初始资金交给交易执行器，模拟调仓；
+     * 4) 输出回测绩效指标（当前为示例指标占位，便于流程联调）。
+     * 实现方式：通过 ETFDataService、RotationStrategy、TradeExecutor 三个抽象协作，
+     * 将回测流程解耦为可替换组件，便于后续替换真实撮合与绩效计算逻辑。
+     */
     @Override
     public void runBacktest(List<String> etfPool, LocalDate start, LocalDate end, double initialCash) {
         Map<String, List<PriceData>> allData = new HashMap<String, List<PriceData>>();
